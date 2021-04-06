@@ -19,6 +19,7 @@ const Chats = React.memo(({chats, users, uid, onEmojiClick}) => {
 })
 
 const ChatRoom = (props) => {
+
   const history = useHistory();
   const [chats, setChats] = useState([]);
   const [uid, setUid] = useState("");
@@ -63,6 +64,7 @@ const ChatRoom = (props) => {
   }, [chats]);
 
   const addDocument = () => {
+    console.log("Start!!!!!!!!!");
     db
       .collection('chat')
       .doc('room_' + channelId)
@@ -141,14 +143,17 @@ const ChatRoom = (props) => {
     }
 
     const uids = chats.map((chat) => {
+      console.log("chat", chat);
       return chat.uid
     }).filter(onlyUnique)
 
     var usersRef = db.collection("user");
+    console.log('userRef', usersRef);
     var arr = {};
     usersRef.where("uid", 'in',  uids).get().then((querySnapshot) => {
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        console.log("doc.data", data);
         arr[data.uid] = data;
       })
       setUsers(arr);
@@ -194,13 +199,13 @@ const ChatRoom = (props) => {
 
   return <div style={{position:'relative'}} className="vh100">
 
-    <input value={text} onChange={evt => {setText(evt.target.value)}}/>
+    {/* <input value={text} onChange={evt => {setText(evt.target.value)}}/> */}
 
-    <div onClick={onClick}>??????</div>
+    {/* <div onClick={onClick}>??????</div> */}
 
     <hr/>
 
-    {memoizedText}
+    {/* {memoizedText} */}
 
     <div className="flex fdr vh100">
       <div className="w200 bg_black p16">
