@@ -3,6 +3,7 @@ import '../App.css';
 import {useHistory} from 'react-router-dom';
 import {db, firebaseApp, firebase} from '../firebase';
 import Spinner from '../components/Spinner';
+import Button from "@material-ui/core/Button";
 
 const Signup = () => {
   const history = useHistory();
@@ -10,38 +11,40 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [nickName, setNickName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loginStatus, setLoginStatus] = useState(false);
   const [uid, setUid] = useState("");
+  const [loginStatus, setLoginStatus] = useState(false);
 
   const signup = () => {
     if(email.length < 3) {
-      alert('!!!');
-      return
+      alert('올바른 이메일을 입력해주세요.');
+      return;
     }
+
+    //TODO: validation check
 
     setLoading(true);
     firebaseApp.auth().createUserWithEmailAndPassword(email, password)
     .then((user) => {
-      console.log(email, password);
-      const uid = (firebaseApp.auth().currentUser || {}).uid
-      console.log(uid); //tngyNVDEKdY6WqpLVTb3BEbTIfZ2
-
+      const uid = (firebaseApp.auth().currentUser || {}).uid;
       if(uid){
         db
-        .collection('google')
+        .collection('user')
         .add({
           uid: uid,
           nickName: nickName,
-          age: 20, 
           email: email,
           created: firebase.firestore.Timestamp.now().seconds
         })
         .then((ref) => {
           setLoginStatus(true);
           setUid(uid);
+      
           setEmail("");
           setPassword("");
-          history.push('/createChat')
+
+          alert(nickName + '님 환영합니다.');
+          history.push('/createChat');
+
           setLoading(false);
         })
       }else{
@@ -50,19 +53,23 @@ const Signup = () => {
     })
     .catch((error) => {
       setLoading(false);
-      var errorCode = error.code;
-      var errorMessage = error.message;
+      let errorCode = error.code;
+      if(errorCode === "auth/email-already-in-use"){
+        alert('이미 존재하는 사용자입니다. 로그인 해주세요.');
+        history.push('/login');
+      }else{
+        console.log(error);
+      }
     });
   }
 
   useEffect(() => {
     firebaseApp.auth().onAuthStateChanged((user) => {
-      const uid = (firebaseApp.auth().currentUser || {}).uid
+      const uid = (firebaseApp.auth().currentUser || {}).uid;
       if(uid){
         setLoginStatus(true);
         setUid(uid);
-        history.push('/app')
-      }else{
+        history.push('/app');
       }
     })
   }, [])
@@ -106,9 +113,7 @@ const Signup = () => {
           </div>
           <div className="jcc flex pt16 pb16">
           </div>
-          <div onClick={signup} className="btn btn-success btn-fit">
-            Signup
-          </div>
+          <Button type="button" variant="outlined" color="primary" onClick={signup}> Sign Up </Button>
         </div>
       </div>
     </div>
