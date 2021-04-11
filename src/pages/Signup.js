@@ -17,13 +17,15 @@ const Signup = () => {
   const signup = () => {
     if(email.length < 3) {
       alert('올바른 이메일을 입력해주세요.');
-      return
+      return;
     }
+
+    //TODO: validation check
 
     setLoading(true);
     firebaseApp.auth().createUserWithEmailAndPassword(email, password)
     .then((user) => {
-      const uid = (firebaseApp.auth().currentUser || {}).uid
+      const uid = (firebaseApp.auth().currentUser || {}).uid;
       if(uid){
         db
         .collection('user')
@@ -36,9 +38,13 @@ const Signup = () => {
         .then((ref) => {
           setLoginStatus(true);
           setUid(uid);
+      
           setEmail("");
           setPassword("");
-          history.push('/createChat')
+
+          alert(nickName + '님 환영합니다.');
+          history.push('/createChat');
+
           setLoading(false);
         })
       }else{
@@ -46,25 +52,24 @@ const Signup = () => {
       }
     })
     .catch((error) => {
-      console.log(error);
       setLoading(false);
-      var errorCode = error.code;
-      var errorMessage = error.message;
-      if( errorCode === "auth/email-already-in-use"){
+      let errorCode = error.code;
+      if(errorCode === "auth/email-already-in-use"){
         alert('이미 존재하는 사용자입니다. 로그인 해주세요.');
-        history.push('/login')
+        history.push('/login');
+      }else{
+        console.log(error);
       }
     });
   }
 
   useEffect(() => {
     firebaseApp.auth().onAuthStateChanged((user) => {
-      const uid = (firebaseApp.auth().currentUser || {}).uid
+      const uid = (firebaseApp.auth().currentUser || {}).uid;
       if(uid){
         setLoginStatus(true);
         setUid(uid);
-        history.push('/app')
-      }else{
+        history.push('/app');
       }
     })
   }, [])

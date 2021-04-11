@@ -2,18 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import { db, firebaseApp } from "../firebase";
 import { makeStyles } from "@material-ui/core/styles";
-import { BiSend, BiLogOut, BiCommentAdd } from "react-icons/bi";
-import {
-  Grid,
-  Paper,
-  Button,
-  TextField,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  Typography,
-} from "@material-ui/core";
+import { BiLogOut } from "react-icons/bi";
+import { Grid, Paper, Button, TextField, List, ListItem, ListItemText, Typography, Divider } from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
   listDiv: {
@@ -44,8 +34,6 @@ const useStyles = makeStyles((theme) => ({
 const ChatRoomCreate = (props) => {
   const classes = useStyles();
   const history = useHistory();
-  
-
   const [channel, setChannel] = useState("");
   const [roomData, setRoomData] = useState([]);
 
@@ -54,57 +42,45 @@ const ChatRoomCreate = (props) => {
   };
 
   const creatNewChatRoom = () => {
-    history.push(`/chat/${channel}`);
+    if(Object.values(roomData).indexOf(channel) > -1){
+      alert('이미 존재하는 채널명입니다.');
+      setChannel('');
+      return;
+    }
+
+    db
+    .collection('chat')
+    .doc('room_' + channel)
+    .set({name: channel})
+    .then(() => {
+      alert(channel + ' 채널이 생성되었습니다.');
+      history.push(`/chat/${channel}`);
+    })
+    .catch(() => {
+      alert('채널 생성에 실패하였습니다.');
+    });
   };
+
+  const joinChat = (roomName) => {
+    history.push(`/chat/${roomName}`);
+  }
 
   const logout = () => {
     firebaseApp.auth().signOut();
     history.push("/login");
   };
 
-  // const roomRef = db.collection("chat");
-  // roomRef.onSnapshot((snapshot) => {
-  //   console.log("snapshot.size => ", snapshot.size);
-  //   snapshot.docs.map((doc) => {
-  //     console.log("doc.data => ", doc.data().name); 
-  //     console.log("doc.getId => ", doc.id);
-  //   });
-  // });
-
-  // useEffect(() => {
-  //   db.collection("chat")
-  //   .get()
-  //   .then((querySnapshot) => {
-  //     querySnapshot.forEach((doc) => {
-  //       console.log("querySnapshot.size => ", querySnapshot.size);
-  //       console.log("doc.data().name  => ", doc.data().name);
-  //       roomData.push(doc.data().name);
-  //       //setRoomDate({...roomData, ['name']:doc.data().name});
-  //       console.log(roomData);
-  //     });
-  //   });
-  // },[roomData]);
- 
-
   useEffect(() => {
+    let addedList = [];
     db.collection("chat")
     .get()
     .then((querySnapshot) => {
-      let addedList = [];
       querySnapshot.forEach((doc) => {
         addedList = addedList.concat({id:doc.id, name:doc.data().name});
-        console.log('addedList---------->', addedList);
       });
-        if(addedList){
-          setRoomData(addedList);
-          console.log('roomData--------->', roomData);
-        }
+      setRoomData(addedList);
     })
   }, []);
-
-  
-    
-  
 
   return (
     <div>
@@ -124,11 +100,11 @@ const ChatRoomCreate = (props) => {
       <Grid container direction="column" alignItems="center">
         <Grid item item xs={12} sm={12} md={12}>
           <Paper className={classes.paperTop} elevation={3}>
-          <Typography variant="h6"> Create Chat Room </Typography>
+          <Typography variant="h6"> Create Channel </Typography>
           <TextField
             className={classes.input}
             variant="outlined"
-            placeholder="채널 이름을 입력하세요."
+            placeholder="개설할 채널 이름을 입력하세요."
             value={channel}
             onChange={(evt) => {
               onTextareaChange(evt);
@@ -149,22 +125,16 @@ const ChatRoomCreate = (props) => {
 
         <Grid item item xs={12} sm={12} md={12}>
           <Paper className={classes.paper} elevation={3}>
-            <Typography variant="h6"> Join Chat </Typography>
+            <Typography variant="h6"> Join Channel </Typography>
             <div className={classes.listDiv}>
+              <List>
                 { roomData && 
                   roomData.map((room) => {
-                    <Typography>{room.id + room.name}</Typography>
-                    // <ListItem button> <ListItemText primary={room.id} /> </ListItem>
+                    return <ListItem key={room.id} button onClick={(evt) => joinChat(room.name)}> <ListItemText primary={room.name} /></ListItem>
                   })
                 }
-                {
-                  roomData == undefined || roomData.length == 0 && (
-                    <Typography>현재 개설된 채팅방이 없습니다.</Typography>
-                  )
-                }
-              {/* <List>
-                  <ListItem button> <ListItemText primary="test" /> </ListItem>
-              </List> */}
+                { roomData == null || roomData.length == 0 && ( <Typography>현재 개설된 채팅방이 없습니다.</Typography>)}
+              </List>
             </div>
           </Paper>
         </Grid>

@@ -82,21 +82,20 @@ const Login = () => {
         }
       })
       .catch((error) => {
-        console.log('error');
-        console.log(error);
         setLoading(false);
-        var errorCode = error.code;
-        var errorMessage = error.message;
+        
+        let errorCode = error.code;
         if (errorCode === "auth/user-not-found") {
           alert("가입하세요.");
         }else if(errorCode === "auth/invalid-email"){
           alert("이메일 형식이 아닙니다.");
-        }
-        else if (errorCode === "auth/wrong-password") {
+        }else if (errorCode === "auth/wrong-password") {
           alert("비밀번호가 올바르지 않습니다.");
         }else if (errorCode === "auth/too-many-requests") {
           alert("다시 로그인 해주세요.");
           window.location.reload();
+        }else{
+          console.log(error);
         }
       });
   };
@@ -109,11 +108,13 @@ const Login = () => {
   useEffect(() => {
     firebaseApp.auth().onAuthStateChanged((user) => {
       setInitLoaded(true);
+      
       const uid = (firebaseApp.auth().currentUser || {}).uid;
       if (uid) {
         setLoginStatus(true);
         history.push("/createChat");
       } else {
+        //TODO: else 작성
       }
     });
   }, []);
